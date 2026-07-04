@@ -3,6 +3,9 @@
 **Système intelligent d'appariement entre demandeurs d'emploi et offres d'emploi**
 Prototype développé pour le **Hackathon IA — IndabaX Congo 2026 × ACPE**.
 
+🔗 **Démo en ligne : [emploi-match-congo.streamlit.app](https://emploi-match-congo.streamlit.app)**
+📄 Rapport technique : [`Rapport_EmploiMatch_Congo.docx`](Rapport_EmploiMatch_Congo.docx) · Licence : MIT
+
 ## 🎯 Objectif
 
 Mettre automatiquement en relation les demandeurs d'emploi et les offres d'emploi
@@ -10,7 +13,7 @@ au Congo à l'aide de techniques de Data Science, de Machine Learning et de NLP,
 dans les deux sens :
 
 - **Demandeur → Offres** : un candidat colle son CV (texte libre) et obtient les offres les plus pertinentes, classées par score — couvre aussi le **Bonus 1 (recherche intelligente en langage naturel)**.
-- **Employeur → Candidats** : un recruteur sélectionne une offre et obtient les candidats les mieux classés.
+- **Employeur → Candidats** : un recruteur sélectionne une offre et obtient les candidats les mieux classés, ou recherche des candidats en langage naturel (« Je cherche un candidat en comptabilité avec une mobilité nationale »).
 
 Les compétences manquantes sont affichées pour chaque recommandation
 (**Bonus 2 — analyse des écarts de compétences / skill gap**).
@@ -42,7 +45,9 @@ emploi-match/
 │   ├── raw/                  # Dataset officiel ACPE (xlsx)
 │   ├── offres_acpe.csv       # 2 531 offres réelles ACPE, nettoyées et enrichies
 │   ├── appariement.csv       # Vérité terrain : 41 285 demandeurs -> 3 offres
-│   ├── demandeurs.csv        # 400 profils synthétiques (les profils réels ne sont pas fournis)
+│   ├── demandeurs_acpe.csv   # 41 285 profils réels ACPE convertis
+│   ├── recommendations_top5.csv / top10.csv   # Fichiers de soumission
+│   ├── demandeurs.csv        # 400 profils synthétiques (démonstration)
 │   └── offres.csv            # 200 offres synthétiques (secours)
 └── src/
     ├── skills_taxonomy.py    # Référentiel compétences / villes / diplômes
@@ -82,7 +87,7 @@ L'application s'ouvre sur http://localhost:8501 avec trois onglets :
 
 ### Dataset officiel ACPE
 
-`src/prepare_data.py` fusionne les trois fichiers officiels en une table unique :
+`src/prepare_data.py` fusionne les fichiers officiels en tables uniques :
 
 - **Offres_ACPE.xlsx** — 2 535 offres (référence, intitulé, secteur, entreprise, lieu, contrat) ;
 - **Offres_ACPE_Extensions.xlsx** — 143 offres enrichies (description, profil, compétences) ;
@@ -94,13 +99,14 @@ minimale (« 2 à 5 ans » → 2) depuis le champ Profil, et extraction automati
 compétences par référentiel pour les offres sans champ Compétences
 (1 350 offres sur 2 531 obtiennent ainsi des compétences structurées).
 
-### Profils demandeurs
+### Profils demandeurs (Demandeurs.xlsx)
 
-Le dataset officiel ne contient pas (encore) les profils des demandeurs — seul
-leur identifiant apparaît dans le fichier d'appariement. Des profils synthétiques
-réalistes sont donc utilisés côté demandeurs. Dès que le fichier des demandeurs
-réels sera disponible, il suffira de remplacer `data/demandeurs.csv`
-(mêmes colonnes) — le moteur est indépendant des données.
+Les 41 298 profils réels (41 285 après déduplication) sont convertis en
+`data/demandeurs_acpe.csv` : département décodé depuis le préfixe du matricule
+(PPBZV → Brazzaville, PPPNR → Pointe-Noire…), niveaux d'études projetés sur une
+échelle ordonnée (« Bac +3 » → Licence), texte de profil composé à partir du
+métier visé, de la qualification, de la filière, des secteurs et du diplôme.
+L'extraction par référentiel détecte des compétences pour 29 620 profils (72 %).
 
 ## 🏆 Résultats officiels (41 285 demandeurs réels × 2 531 offres)
 

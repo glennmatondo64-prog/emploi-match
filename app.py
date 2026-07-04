@@ -21,11 +21,20 @@ st.set_page_config(page_title="EmploiMatch Congo", page_icon="🇨🇬", layout=
 def load_engine():
     acpe = DATA_DIR / "offres_acpe.csv"
     offers = pd.read_csv(acpe if acpe.exists() else DATA_DIR / "offres.csv")
-    seekers = pd.read_csv(DATA_DIR / "demandeurs.csv")
-    return MatchingEngine(offers, seekers), acpe.exists()
+    dem_acpe = DATA_DIR / "demandeurs_acpe.csv"
+    if dem_acpe.exists():
+        # Échantillon de profils réels pour garder la démo fluide
+        seekers = (pd.read_csv(dem_acpe)
+                   .sample(n=5000, random_state=42)
+                   .reset_index(drop=True))
+        real_seekers = True
+    else:
+        seekers = pd.read_csv(DATA_DIR / "demandeurs.csv")
+        real_seekers = False
+    return MatchingEngine(offers, seekers), acpe.exists(), real_seekers
 
 
-engine, REAL_DATA = load_engine()
+engine, REAL_DATA, REAL_SEEKERS = load_engine()
 
 st.title("🇨🇬 EmploiMatch Congo")
 st.caption(
@@ -33,6 +42,8 @@ st.caption(
     "Hackathon IndabaX Congo 2026 × ACPE. "
     + ("Offres : dataset officiel ACPE (2 531 offres réelles). "
        if REAL_DATA else "Offres : données synthétiques de démonstration. ")
+    + ("Candidats : 5 000 profils réels ACPE (échantillon anonymisé). "
+       if REAL_SEEKERS else "Candidats : profils synthétiques. ")
     + ("Mode : hybride (compétences + TF-IDF + embeddings sémantiques)."
        if EMBEDDINGS_AVAILABLE else
        "Mode : compétences + TF-IDF (installez sentence-transformers pour le mode sémantique).")
@@ -90,6 +101,15 @@ with tab_seeker:
 
 # ---------------------------------------------------------------- employer
 with tab_employer:
+    st.subheader("Recherche de candidats en langage naturel")
+    query = st.text_input(
+        "Décrivez le profil recherché",
+        placeholder="Ex. : Je cherche un candidat en comptabilité avec une mobilité nationale",
+    )
+    if query.strip():
+        st.dataframe(engine.search_candidates(query, top_n=10),
+                     use_container_width=True, hide_index=True)
+    st.divider()
     st.subheader("Trouvez les meilleurs candidats pour votre offre")
     offers = engine.offers
     label_o = offers["id_offre"] + " — " + offers["titre"] + " @ " + offers["entreprise"] + " (" + offers["ville"] + ")"
@@ -142,3 +162,11 @@ with tab_stats:
     else:
         st.info("Lancez `python src/recommend.py --top-k 10` pour générer les "
                 "recommandations et compléter ce tableau de bord.")
+
+
+st.divider()
+st.caption(
+    "Code source : [github.com/glennmatondo64-prog/emploi-match]"
+    "(https://github.com/glennmatondo64-prog/emploi-match) — "
+    "Hackathon IndabaX Congo 2026 × ACPE."
+)

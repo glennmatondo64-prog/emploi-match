@@ -198,6 +198,35 @@ class MatchingEngine:
                 .head(top_n)
                 .reset_index(drop=True))
 
+    def search_candidates(self, query: str, top_n: int = 10) -> pd.DataFrame:
+        """Recherche de candidats en langage naturel (Bonus 1).
+
+        Exemple : "Je cherche un candidat en comptabilité avec une mobilité nationale."
+        """
+        norm_q = normalize(query)
+        q_skills = set(extract_skills(query))
+        sims = cosine_similarity(self._vectorizer.transform([norm_q]),
+                                 self._seeker_tfidf).ravel()
+        if q_skills:
+            sk = np.array([len(q_skills & s) / len(q_skills) for s in self._seeker_skills])
+            total = 0.6 * sims + 0.4 * sk
+        else:
+            total = sims
+        idx = np.argsort(-total)[:top_n]
+        rows = []
+        for i in idx:
+            seeker = self.seekers.iloc[int(i)]
+            rows.append({
+                "id_demandeur": seeker["id_demandeur"],
+                "profil": seeker["titre_professionnel"],
+                "ville": seeker["ville"],
+                "niveau_etudes": seeker["niveau_etudes"],
+                "score": round(float(total[i]) * 100, 1),
+                "competences_correspondantes":
+                    ", ".join(sorted(q_skills & self._seeker_skills[int(i)])) or "—",
+            })
+        return pd.DataFrame(rows)
+
     def match_seekers_for_offer(self, offer_idx: int, top_n: int = 10) -> pd.DataFrame:
         """Rank candidates for a given offer."""
         offer = self.offers.iloc[offer_idx]

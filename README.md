@@ -4,7 +4,7 @@
 Prototype développé pour le **Hackathon IA — IndabaX Congo 2026 × ACPE**.
 
 🔗 **Démo en ligne : [emploi-match-congo.streamlit.app](https://emploi-match-congo.streamlit.app)**
-📄 Rapport technique : [`Rapport_EmploiMatch_Congo.docx`](Rapport_EmploiMatch_Congo.docx) · Licence : MIT
+📄 Rapport technique : [`Rapport_EmploiMatch_Congo.pdf`](Rapport_EmploiMatch_Congo.pdf) · Licence : MIT
 
 ## 🎯 Objectif
 
